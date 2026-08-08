@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.vite/
+*.log
+*.tsbuildinfo
+.DS_Store
+desktop-qa.png
+mobile-qa.png
