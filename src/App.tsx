@@ -243,6 +243,7 @@ function ActivityBlock({ label, activity }: { label: string; activity: Activity 
 function App() {
   const [input, setInput] = useState<PlannerInput>(DEFAULT_INPUT)
   const [itinerary, setItinerary] = useState<Itinerary | null>(null)
+  const [theme, setTheme] = useState<'editorial' | 'neon'>('editorial')
   const resultsRef = useRef<HTMLElement>(null)
   const routePreview = useMemo(() => itinerary, [itinerary])
   const selectedSeason = seasonFromMonth(input.travelMonth)
@@ -274,13 +275,25 @@ function App() {
   }
 
   return (
-    <main>
-      <section className="hero" style={{ backgroundImage: `url(${asset('/images/hero-journey.webp')})` }}>
+    <main className={`theme-${theme}`}>
+      <section className="hero" style={{ backgroundImage: `url(${asset(theme === 'neon' ? '/images/tokyo-evening.webp' : '/images/hero-journey.webp')})` }}>
         <nav className="hero-nav" aria-label="Main navigation">
           <a className="wordmark" href="#top" aria-label="Japan, By Days home">
             <span>日本</span> Japan, By Days
           </a>
-          <a className="nav-link" href="#planner">Build your route <Arrow /></a>
+          <div className="nav-actions">
+            <button
+              className="theme-toggle"
+              type="button"
+              aria-pressed={theme === 'neon'}
+              aria-label={theme === 'neon' ? 'Switch to paper daylight theme' : 'Switch to city neon theme'}
+              onClick={() => setTheme((current) => current === 'neon' ? 'editorial' : 'neon')}
+            >
+              <span className="theme-light" aria-hidden="true" />
+              <span className="theme-label">{theme === 'neon' ? 'Paper daylight' : 'City neon'}</span>
+            </button>
+            <a className="nav-link" href="#planner">Build your route <Arrow /></a>
+          </div>
         </nav>
         <div className="hero-content" id="top">
           <p className="eyebrow light">Manila → Japan · 3–30 days</p>
