@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { JPY_TO_PHP_RATE } from './data'
+import { DESTINATIONS, JPY_TO_PHP_RATE } from './data'
 import { buildItinerary } from './planner'
 import type { PlannerInput } from './types'
 
@@ -24,6 +24,17 @@ describe('buildItinerary', () => {
     activities
       .filter((activity) => !activity.id.startsWith('transfer-'))
       .forEach((activity) => expect(activity.interests.length).toBeGreaterThan(0))
+  })
+
+  it('includes concrete venue and order guidance across every destination', () => {
+    DESTINATIONS.forEach((destination) => {
+      const recommendations = destination.activities.filter((activity) => activity.recommendation)
+      expect(recommendations.length).toBeGreaterThanOrEqual(2)
+      recommendations.forEach((activity) => {
+        expect(activity.place).not.toBe(activity.title)
+        expect(activity.recommendation?.length).toBeGreaterThan(20)
+      })
+    })
   })
 
   it('keeps a three-day local trip deep and non-repeating', () => {

@@ -50,6 +50,8 @@ const DEFAULT_INPUT: PlannerInput = {
   willingToDrive: false,
 }
 
+const DURATION_PRESETS = [3, 7, 10, 14, 21, 30]
+
 const formatJPY = ({ min, max }: MoneyRange) => `¥${min.toLocaleString()}–¥${max.toLocaleString()}`
 const formatPHP = ({ min, max }: MoneyRange) => `₱${min.toLocaleString()}–₱${max.toLocaleString()}`
 const duration = (minutes: number) => `${Math.floor(minutes / 60) ? `${Math.floor(minutes / 60)}h ` : ''}${minutes % 60 ? `${minutes % 60}m` : ''}`.trim()
@@ -189,6 +191,7 @@ function CostList({ itinerary }: { itinerary: Itinerary }) {
 }
 
 function ActivityBlock({ label, activity }: { label: string; activity: Activity }) {
+  const showSeparatePlace = !activity.title.toLocaleLowerCase().includes(activity.place.toLocaleLowerCase())
   return (
     <div className="activity-block">
       <span className="activity-time">{label}</span>
@@ -201,7 +204,8 @@ function ActivityBlock({ label, activity }: { label: string; activity: Activity 
               : <span>Transfer</span>}
           </div>
         </div>
-        <div className="activity-place"><span>Suggested stop</span><strong>{activity.place}</strong></div>
+        {showSeparatePlace && <div className="activity-place"><span>Go to</span><strong>{activity.place}</strong></div>}
+        {activity.recommendation && <div className="activity-recommendation"><span>Try</span><strong>{activity.recommendation}</strong></div>}
         <p>{activity.description}</p>
         <div className="activity-meta">
           <span>{activity.costJPY.max ? formatJPY(activity.costJPY) : 'No planned admission'}</span>
@@ -274,11 +278,11 @@ function App() {
       </section>
 
       <section className="editorial-strip" aria-label="Japan travel moments">
-        <figure className="photo photo-tall">
+        <figure className="photo">
           <img src={asset('/images/tokyo-evening.webp')} alt="Two travelers walking through a quiet Tokyo lane after rain" />
           <figcaption><span>Tokyo</span><small>City detail, after rain</small></figcaption>
         </figure>
-        <figure className="photo photo-offset">
+        <figure className="photo">
           <img src={asset('/images/kyoto-morning.webp')} alt="A traveler approaching a quiet Kyoto temple gate" />
           <figcaption><span>Kyoto</span><small>First light, before the crowds</small></figcaption>
         </figure>
@@ -311,8 +315,14 @@ function App() {
                 aria-label="Trip duration in days"
               />
               <div className="duration-presets" aria-label="Common trip durations">
-                {[3, 7, 10, 14, 21, 30].map((days) => (
-                  <button key={days} type="button" className={input.days === days ? 'active' : ''} onClick={() => update('days', days)}>{days}</button>
+                {DURATION_PRESETS.map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    className={input.days === days ? 'active' : ''}
+                    style={{ '--preset-position': `${((days - 3) / 27) * 100}%` } as React.CSSProperties}
+                    onClick={() => update('days', days)}
+                  >{days}</button>
                 ))}
               </div>
             </fieldset>

@@ -25,6 +25,7 @@ export interface Activity {
   id: string
   title: string
   place: string
+  recommendation?: string
   description: string
   slot: DaySlot
   interests: Interest[]

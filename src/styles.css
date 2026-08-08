@@ -266,10 +266,9 @@ img {
 
 .editorial-strip {
   display: grid;
-  min-height: 780px;
-  grid-template-columns: 1.1fr 0.8fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(0.8rem, 2vw, 2rem);
-  align-items: center;
+  align-items: start;
   padding: 2rem clamp(1.25rem, 3vw, 3rem) 8rem;
 }
 
@@ -278,17 +277,9 @@ img {
 }
 
 .photo img {
-  height: clamp(280px, 42vw, 580px);
+  height: clamp(320px, 40vw, 580px);
   object-fit: cover;
   filter: saturate(0.84) contrast(0.96);
-}
-
-.photo-tall img {
-  height: clamp(430px, 58vw, 740px);
-}
-
-.photo-offset {
-  transform: translateY(5rem);
 }
 
 .photo figcaption {
@@ -412,11 +403,14 @@ input[type='range']::-moz-range-thumb {
 }
 
 .duration-presets {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 2rem;
+  margin: 0 11px;
 }
 
 .duration-presets button {
+  position: absolute;
+  left: var(--preset-position);
   padding: 0.45rem;
   border: 0;
   color: var(--ink-soft);
@@ -424,6 +418,7 @@ input[type='range']::-moz-range-thumb {
   font-size: 0.7rem;
   font-weight: 730;
   cursor: pointer;
+  transform: translateX(-50%);
 }
 
 .duration-presets button.active {
@@ -1216,6 +1211,31 @@ input[type='range']::-moz-range-thumb {
   font-weight: 650;
 }
 
+.activity-recommendation {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr;
+  gap: 0.7rem;
+  align-items: baseline;
+  margin: -0.2rem 0 0.85rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid rgba(239, 170, 150, 0.62);
+}
+
+.activity-recommendation span {
+  color: #efaa96;
+  font-size: 0.53rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.activity-recommendation strong {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.72rem;
+  font-weight: 580;
+  line-height: 1.55;
+}
+
 .activity-block p {
   margin: 0;
   color: rgba(255, 255, 255, 0.58);
@@ -1458,13 +1478,7 @@ footer > a {
     padding: 1.25rem 1.25rem 5rem;
   }
 
-  .photo,
-  .photo-offset {
-    transform: none;
-  }
-
-  .photo img,
-  .photo-tall img {
+  .photo img {
     height: 62vw;
     min-height: 240px;
   }
