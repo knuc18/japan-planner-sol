@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DESTINATIONS, JPY_TO_PHP_RATE } from './data'
-import { buildItinerary } from './planner'
+import { buildItinerary, seasonFromMonth } from './planner'
 import type { PlannerInput } from './types'
 
 const base: PlannerInput = {
@@ -13,6 +13,14 @@ const base: PlannerInput = {
 }
 
 describe('buildItinerary', () => {
+  it('maps each selected travel month to Japan\'s season', () => {
+    expect(seasonFromMonth('2027-03')).toBe('spring')
+    expect(seasonFromMonth('2027-06')).toBe('summer')
+    expect(seasonFromMonth('2027-09')).toBe('autumn')
+    expect(seasonFromMonth('2027-12')).toBe('winter')
+    expect(seasonFromMonth('')).toBe('any')
+  })
+
   it('is deterministic for identical choices', () => {
     expect(buildItinerary(base)).toEqual(buildItinerary(base))
   })

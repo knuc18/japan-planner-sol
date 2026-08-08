@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react'
 import { JPY_TO_PHP_RATE, RATE_VERIFIED_ON, SOURCES } from './data'
-import { buildItinerary } from './planner'
+import { buildItinerary, seasonFromMonth } from './planner'
 import type {
   Activity,
   Budget,
@@ -9,6 +9,7 @@ import type {
   MoneyRange,
   Pace,
   PlannerInput,
+  Season,
   TransportMode,
 } from './types'
 
@@ -51,6 +52,29 @@ const DEFAULT_INPUT: PlannerInput = {
 }
 
 const DURATION_PRESETS = [3, 7, 10, 14, 21, 30]
+
+const SEASON_GUIDE: Record<Exclude<Season, 'any'>, { label: string; months: string; summary: string }> = {
+  spring: {
+    label: 'Spring in Japan',
+    months: 'March–May',
+    summary: 'Mild days, cool evenings, and blossoms that arrive at different times from south to north.',
+  },
+  summer: {
+    label: 'Summer in Japan',
+    months: 'June–August',
+    summary: 'June often brings rain; July and August are hot and humid, with milder conditions in Hokkaido.',
+  },
+  autumn: {
+    label: 'Autumn in Japan',
+    months: 'September–November',
+    summary: 'Warm early weeks give way to crisp days and foliage that gradually moves south.',
+  },
+  winter: {
+    label: 'Winter in Japan',
+    months: 'December–February',
+    summary: 'Cities are often cold and dry, while Hokkaido, Tohoku, and mountain regions receive deep snow.',
+  },
+}
 
 const formatJPY = ({ min, max }: MoneyRange) => `¥${min.toLocaleString()}–¥${max.toLocaleString()}`
 const formatPHP = ({ min, max }: MoneyRange) => `₱${min.toLocaleString()}–₱${max.toLocaleString()}`
@@ -221,6 +245,8 @@ function App() {
   const [itinerary, setItinerary] = useState<Itinerary | null>(null)
   const resultsRef = useRef<HTMLElement>(null)
   const routePreview = useMemo(() => itinerary, [itinerary])
+  const selectedSeason = seasonFromMonth(input.travelMonth)
+  const seasonGuide = selectedSeason === 'any' ? null : SEASON_GUIDE[selectedSeason]
 
   const update = <K extends keyof PlannerInput>(key: K, value: PlannerInput[K]) => {
     setInput((current) => ({ ...current, [key]: value }))
@@ -329,8 +355,19 @@ function App() {
 
             <div className="month-field">
               <label htmlFor="travel-month">Travel month <span>Optional</span></label>
-              <input id="travel-month" type="month" value={input.travelMonth} onChange={(event) => update('travelMonth', event.target.value)} />
-              <p>Used for seasonal activities—not a weather forecast.</p>
+              <input id="travel-month" type="month" value={input.travelMonth} onInput={(event) => update('travelMonth', event.currentTarget.value)} />
+              {seasonGuide ? (
+                <div className="season-note" role="status" aria-live="polite">
+                  <div>
+                    <span>Season</span>
+                    <strong>{seasonGuide.label}</strong>
+                    <small>{seasonGuide.months}</small>
+                  </div>
+                  <p>{seasonGuide.summary}</p>
+                </div>
+              ) : (
+                <p>Choose a month to see the season and tailor seasonal activities.</p>
+              )}
             </div>
 
             <ChoiceGroup legend="How far should the route reach?" options={PACES} value={input.pace} onChange={(value) => update('pace', value)} />

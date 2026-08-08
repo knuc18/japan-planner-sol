@@ -454,6 +454,39 @@ input[type='range']::-moz-range-thumb {
   line-height: 1.6;
 }
 
+.season-note {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.65fr) minmax(0, 1.35fr);
+  gap: 1.5rem;
+  margin-top: 1.4rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--accent);
+}
+
+.season-note > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.season-note span,
+.season-note small {
+  color: var(--ink-soft);
+  font-size: 0.58rem;
+  font-weight: 720;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.season-note strong {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 520;
+}
+
+.season-note p {
+  margin: 0;
+}
+
 .choice-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1519,6 +1552,11 @@ footer > a {
   .month-field,
   .drive-toggle {
     padding: 2.6rem 0;
+  }
+
+  .season-note {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 
   .choice-row {
