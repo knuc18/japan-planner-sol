@@ -33,6 +33,7 @@ export const SOURCES: SourceMetadata[] = [
 
 interface ActivitySeed {
   title: string
+  place?: string
   description: string
   slot: DaySlot
   interests: Interest[]
@@ -71,6 +72,7 @@ const range = (min: number, max: number): MoneyRange => ({ min, max })
 const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   {
     title: `First light in ${seed.areas.slow}`,
+    place: seed.areas.slow,
     description: `Walk ${seed.areas.slow} before the day gathers pace and notice the neighborhood details most visitors miss.`,
     slot: 'morning',
     interests: ['photography', 'history'],
@@ -79,6 +81,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Counter breakfast around ${seed.areas.food}`,
+    place: seed.areas.food,
     description: `Choose a busy local counter and order the morning specialty in ${seed.areas.food}.`,
     slot: 'morning',
     interests: ['food'],
@@ -87,6 +90,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `A quiet opening at ${seed.areas.shrine}`,
+    place: seed.areas.shrine,
     description: `Visit ${seed.areas.shrine} near opening time for a calm introduction to local ritual and architecture.`,
     slot: 'morning',
     interests: ['history', 'photography'],
@@ -95,6 +99,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Seasonal morning, ${seed.name}`,
+    place: seed.areas.nature,
     description: `Let the month shape a slow morning through ${seed.areas.nature}, with room for weather and seasonal color.`,
     slot: 'morning',
     interests: ['nature', 'wellness', 'photography'],
@@ -104,6 +109,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Plan the day from ${seed.areas.slow}`,
+    place: seed.areas.slow,
     description: `Take a measured café start in ${seed.areas.slow}, then choose one nearby lane to explore without a checklist.`,
     slot: 'morning',
     interests: ['food', 'art'],
@@ -112,6 +118,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Hands-on hour in ${seed.areas.craft}`,
+    place: seed.areas.craft,
     description: `Meet the materials and makers associated with ${seed.areas.craft} through a compact workshop or studio visit.`,
     slot: 'afternoon',
     interests: ['art', 'shopping', 'history'],
@@ -120,6 +127,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Green pause at ${seed.areas.nature}`,
+    place: seed.areas.nature,
     description: `Trade transport for an unhurried walk through ${seed.areas.nature}.`,
     slot: 'afternoon',
     interests: ['nature', 'wellness', 'photography'],
@@ -128,6 +136,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Curated afternoon at ${seed.areas.museum}`,
+    place: seed.areas.museum,
     description: `Use ${seed.areas.museum} to connect the region’s art, design, and everyday history.`,
     slot: 'afternoon',
     interests: ['art', 'history'],
@@ -136,6 +145,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Half-day outward to ${seed.areas.dayTrip}`,
+    place: seed.areas.dayTrip,
     description: `Use a local train or bus to reach ${seed.areas.dayTrip}, keeping the route deliberately compact.`,
     slot: 'afternoon',
     interests: ['nature', 'history', 'photography'],
@@ -144,6 +154,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Browse slowly through ${seed.areas.craft}`,
+    place: seed.areas.craft,
     description: `Compare independent shops and studios in ${seed.areas.craft}, buying only what has a story worth carrying home.`,
     slot: 'afternoon',
     interests: ['shopping', 'art'],
@@ -152,6 +163,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Local table in ${seed.areas.food}`,
+    place: seed.areas.food,
     description: `Build dinner around the region’s defining ingredients at a small restaurant in ${seed.areas.food}.`,
     slot: 'evening',
     interests: ['food'],
@@ -160,6 +172,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Blue hour from ${seed.areas.view}`,
+    place: seed.areas.view,
     description: `Watch the city or landscape change character from ${seed.areas.view}.`,
     slot: 'evening',
     interests: ['photography', 'nightlife'],
@@ -168,6 +181,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `A restorative close in ${seed.name}`,
+    place: `${seed.areas.slow} neighborhood sento or onsen`,
     description: `Finish with a neighborhood bath, onsen, or quiet wellness ritual close to your accommodation.`,
     slot: 'evening',
     interests: ['wellness'],
@@ -176,6 +190,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `After-dark lanes of ${seed.areas.night}`,
+    place: seed.areas.night,
     description: `Follow one well-lit route through ${seed.areas.night}, stopping where the atmosphere feels local and relaxed.`,
     slot: 'evening',
     interests: ['nightlife', 'food', 'photography'],
@@ -184,6 +199,7 @@ const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   },
   {
     title: `Small-stage evening in ${seed.areas.night}`,
+    place: seed.areas.night,
     description: `Look for an intimate music, performance, or listening-bar experience around ${seed.areas.night}.`,
     slot: 'evening',
     interests: ['nightlife', 'art'],
@@ -197,6 +213,7 @@ const makeDestination = (seed: DestinationSeed): Destination => ({
   activities: [...seed.highlights, ...commonActivities(seed)].map((activity, index) => ({
     id: `${seed.id}-${index + 1}`,
     title: activity.title,
+    place: activity.place ?? activity.title,
     description: activity.description,
     slot: activity.slot,
     interests: activity.interests,

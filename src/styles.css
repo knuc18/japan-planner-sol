@@ -639,6 +639,9 @@ input[type='range']::-moz-range-thumb {
 .map-wrap {
   position: relative;
   min-height: 620px;
+  overflow: hidden;
+  border-top: 1px solid rgba(32, 34, 30, 0.28);
+  border-bottom: 1px solid rgba(32, 34, 30, 0.28);
 }
 
 .japan-map {
@@ -647,16 +650,49 @@ input[type='range']::-moz-range-thumb {
   overflow: visible;
 }
 
+.map-guides path {
+  fill: none;
+  stroke: rgba(32, 34, 30, 0.065);
+  stroke-width: 0.8;
+}
+
+.map-sun {
+  fill: rgba(190, 71, 48, 0.09);
+  stroke: rgba(190, 71, 48, 0.2);
+  stroke-width: 0.8;
+}
+
+.map-ocean-label,
+.map-coordinate {
+  fill: rgba(32, 34, 30, 0.46);
+  font-family: 'Manrope Variable', sans-serif;
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+}
+
+.map-coordinate {
+  fill: rgba(32, 34, 30, 0.28);
+  font-size: 5.5px;
+  font-weight: 600;
+}
+
 .map-land {
-  fill: rgba(32, 34, 30, 0.08);
-  stroke: rgba(32, 34, 30, 0.42);
-  stroke-width: 1.2;
+  fill: rgba(32, 34, 30, 0.1);
+  stroke: rgba(32, 34, 30, 0.52);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+}
+
+.map-islet {
+  fill: rgba(32, 34, 30, 0.18);
 }
 
 .map-contour {
   fill: none;
-  stroke: rgba(32, 34, 30, 0.18);
-  stroke-dasharray: 3 5;
+  stroke: rgba(32, 34, 30, 0.2);
+  stroke-dasharray: 2 5;
+  stroke-linecap: round;
 }
 
 .route-shadow,
@@ -667,13 +703,13 @@ input[type='range']::-moz-range-thumb {
 }
 
 .route-shadow {
-  stroke: rgba(255, 255, 255, 0.72);
-  stroke-width: 8;
+  stroke: rgba(255, 255, 255, 0.82);
+  stroke-width: 9;
 }
 
 .route-line {
   stroke: var(--accent);
-  stroke-width: 2.2;
+  stroke-width: 2.5;
   stroke-dasharray: 1200;
   stroke-dashoffset: 1200;
   animation: draw-route 1.6s 120ms ease forwards;
@@ -687,18 +723,26 @@ input[type='range']::-moz-range-thumb {
 .route-stop circle:first-child {
   fill: var(--paper);
   stroke: var(--accent);
-  stroke-width: 1.5;
-}
-
-.route-stop circle:nth-child(2) {
-  fill: var(--accent);
+  stroke-width: 1.8;
 }
 
 .route-stop text {
-  fill: var(--ink);
   font-family: 'Manrope Variable', sans-serif;
-  font-size: 9px;
   font-weight: 700;
+}
+
+.route-stop .stop-number {
+  fill: var(--accent);
+  font-size: 6.5px;
+}
+
+.route-stop .stop-name {
+  fill: var(--ink);
+  stroke: var(--paper);
+  stroke-width: 3px;
+  paint-order: stroke;
+  font-size: 8.5px;
+  letter-spacing: 0.02em;
 }
 
 @keyframes draw-route {
@@ -712,10 +756,9 @@ input[type='range']::-moz-range-thumb {
 
 .map-placeholder {
   position: absolute;
-  top: 47%;
+  bottom: 4rem;
   left: 0;
-  width: 46%;
-  transform: translateY(-50%);
+  width: min(52%, 17rem);
 }
 
 .map-placeholder span {
@@ -728,8 +771,8 @@ input[type='range']::-moz-range-thumb {
 .map-placeholder p {
   margin: 0.8rem 0 0;
   font-family: var(--serif);
-  font-size: 1.8rem;
-  line-height: 1.05;
+  font-size: clamp(1.45rem, 2.5vw, 2rem);
+  line-height: 1.08;
 }
 
 .map-caption {
@@ -825,6 +868,24 @@ input[type='range']::-moz-range-thumb {
   stroke: rgba(255, 255, 255, 0.24);
 }
 
+.route-map-dark .map-guides path {
+  stroke: rgba(255, 255, 255, 0.055);
+}
+
+.route-map-dark .map-sun {
+  fill: rgba(239, 170, 150, 0.07);
+  stroke: rgba(239, 170, 150, 0.2);
+}
+
+.route-map-dark .map-ocean-label,
+.route-map-dark .map-coordinate {
+  fill: rgba(255, 255, 255, 0.3);
+}
+
+.route-map-dark .map-islet {
+  fill: rgba(255, 255, 255, 0.15);
+}
+
 .route-map-dark .map-contour {
   stroke: rgba(255, 255, 255, 0.14);
 }
@@ -837,8 +898,9 @@ input[type='range']::-moz-range-thumb {
   fill: var(--night);
 }
 
-.route-map-dark .route-stop text {
+.route-map-dark .route-stop .stop-name {
   fill: #f1ecdf;
+  stroke: var(--night);
 }
 
 .route-list {
@@ -1042,7 +1104,7 @@ input[type='range']::-moz-range-thumb {
 
 .day-content {
   display: grid;
-  grid-template-columns: 0.72fr 1.28fr;
+  grid-template-columns: minmax(11rem, 0.44fr) minmax(0, 1.56fr);
   gap: clamp(2rem, 5vw, 5rem);
   padding: 0 0 4rem;
   animation: detail-open 280ms ease both;
@@ -1053,26 +1115,33 @@ input[type='range']::-moz-range-thumb {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.day-image {
-  position: relative;
+.day-intro {
   align-self: start;
+  padding-top: 1.45rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-.day-image img {
-  height: 390px;
-  object-fit: cover;
-  filter: saturate(0.72) brightness(0.78);
+.day-intro > span {
+  color: #efaa96;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.day-image span {
-  position: absolute;
-  right: 1.25rem;
-  bottom: 1.25rem;
-  left: 1.25rem;
-  color: rgba(255, 255, 255, 0.88);
+.day-intro h4 {
+  margin: 0.65rem 0 0.7rem;
   font-family: var(--serif);
-  font-size: 1.25rem;
-  line-height: 1.2;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 430;
+  line-height: 1;
+}
+
+.day-intro p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.72rem;
+  line-height: 1.65;
 }
 
 .activity-block {
@@ -1092,10 +1161,59 @@ input[type='range']::-moz-range-thumb {
 }
 
 .activity-block h4 {
-  margin: -0.25rem 0 0.6rem;
+  margin: -0.25rem 0 0;
   font-family: var(--serif);
   font-size: 1.45rem;
   font-weight: 470;
+}
+
+.activity-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.activity-tags {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  max-width: 48%;
+}
+
+.activity-tags span {
+  padding: 0.28rem 0.46rem;
+  border: 1px solid rgba(239, 170, 150, 0.35);
+  border-radius: 99px;
+  color: #efaa96;
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.activity-place {
+  display: flex;
+  gap: 0.7rem;
+  align-items: baseline;
+  margin: 0.75rem 0;
+}
+
+.activity-place span {
+  color: rgba(255, 255, 255, 0.34);
+  font-size: 0.53rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.activity-place strong {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.72rem;
+  font-weight: 650;
 }
 
 .activity-block p {
@@ -1444,16 +1562,22 @@ footer > a {
 
   .day-content {
     grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-
-  .day-image img {
-    height: 260px;
+    gap: 1rem;
   }
 
   .activity-block {
     grid-template-columns: 1fr;
     gap: 0.75rem;
+  }
+
+  .activity-heading {
+    display: block;
+  }
+
+  .activity-tags {
+    justify-content: flex-start;
+    max-width: none;
+    margin-top: 0.85rem;
   }
 
   .activity-meta {

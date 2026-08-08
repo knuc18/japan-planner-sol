@@ -27,6 +27,8 @@ const INTERESTS: { id: Interest; label: string }[] = [
   { id: 'photography', label: 'Photography' },
 ]
 
+const INTEREST_LABELS = Object.fromEntries(INTERESTS.map((interest) => [interest.id, interest.label])) as Record<Interest, string>
+
 const PACES: { id: Pace; label: string; detail: string }[] = [
   { id: 'local', label: 'Stay close', detail: 'Fewer bases, slower days' },
   { id: 'balanced', label: 'Balanced', detail: 'A measured regional arc' },
@@ -68,22 +70,55 @@ function Arrow() {
   )
 }
 
+const routePath = (itinerary: Itinerary | null): string => {
+  const stops = itinerary?.destinations ?? []
+  if (!stops.length) return ''
+
+  return stops.slice(1).reduce((path, stop, index) => {
+    const previous = stops[index]
+    const dx = stop.mapX - previous.mapX
+    const dy = stop.mapY - previous.mapY
+    const distance = Math.max(1, Math.hypot(dx, dy))
+    const bend = (index % 2 ? 1 : -1) * Math.min(18, distance * 0.16)
+    const controlX = (previous.mapX + stop.mapX) / 2 - (dy / distance) * bend
+    const controlY = (previous.mapY + stop.mapY) / 2 + (dx / distance) * bend
+    return `${path} Q ${controlX.toFixed(1)} ${controlY.toFixed(1)} ${stop.mapX} ${stop.mapY}`
+  }, `M ${stops[0].mapX} ${stops[0].mapY}`)
+}
+
 function JapanMap({ itinerary }: { itinerary: Itinerary | null }) {
-  const points = itinerary?.destinations.map((destination) => `${destination.mapX},${destination.mapY}`).join(' ') ?? ''
+  const path = routePath(itinerary)
   return (
     <div className="map-wrap" aria-label={itinerary ? `Map showing ${itinerary.destinations.map((item) => item.name).join(', ')}` : 'Stylized map of Japan'}>
       <svg className="japan-map" viewBox="0 0 360 590" role="img" aria-hidden="true">
-        <path className="map-land" d="M300 26l28 15 15 29-9 30-35 15-28-17-2-35zM265 119l20 9 3 25-12 23-11 31-16 21-5 33-18 25-9 35-18 25-15 31-17 16-6 28-22 20-20-7 5-25 19-18 5-28 18-23 13-31 15-22 8-30 19-20 7-29 17-25zM130 370l27 13-5 27-24 21-28-2-15-19 14-27zM78 391l19 7-1 22-17 21-22-11 2-25zM36 525l16 9 1 25-17 12-14-15 2-20z" />
-        <path className="map-contour" d="M309 54c-4 18-10 35-25 46M272 139c-9 41-32 75-41 118-8 36-28 71-48 100-18 27-25 51-57 61" />
+        <g className="map-guides">
+          <path d="M0 92H360M0 220H360M0 348H360M0 476H360" />
+          <path d="M72 0V590M180 0V590M288 0V590" />
+        </g>
+        <circle className="map-sun" cx="304" cy="72" r="42" />
+        <text className="map-ocean-label" x="16" y="34">JAPAN / 日本</text>
+        <text className="map-coordinate" x="16" y="52">45°N — 24°N · Pacific arc</text>
+        <g className="map-islands">
+          <path className="map-land" d="M282 27c14-9 32-6 42 5l21 18-8 18 5 17-15 13-18-7-12 13-17-9-10-20 3-24z" />
+          <path className="map-land" d="M267 119c11 7 18 18 18 31l-9 26-2 32-13 24-1 27-11 25-4 24-18 17-9 21-19 3-9 17-17 3-10 20-19 8-21-7 9-17 21-8 8-20 21-9 7-23 21-14 8-29 18-23 5-31 14-24-1-29z" />
+          <path className="map-land" d="M126 375c13-6 30 0 37 10l-8 19-22 11-24-4-8-14 9-15z" />
+          <path className="map-land" d="M75 380c14 0 27 10 26 23l-8 13 5 16-13 15-18 17-18-11 5-18-4-13 9-16-2-14z" />
+          <path className="map-land" d="M27 533c8-7 19-4 25 5l-1 19-13 14-15-9-2-16z" />
+          <circle className="map-islet" cx="18" cy="503" r="2.2" />
+          <circle className="map-islet" cx="13" cy="482" r="1.4" />
+          <circle className="map-islet" cx="106" cy="431" r="1.8" />
+          <circle className="map-islet" cx="145" cy="429" r="1.4" />
+        </g>
+        <path className="map-contour" d="M304 43c9 11 12 25 5 39M274 137c-3 32-8 57-20 84-10 22-7 45-18 66-12 23-33 35-44 57-10 20-29 27-45 42M78 398c8 12 7 27-3 42" />
         {itinerary && (
           <>
-            <polyline className="route-shadow" points={points} />
-            <polyline className="route-line" points={points} />
+            <path className="route-shadow" d={path} />
+            <path className="route-line" d={path} />
             {itinerary.destinations.map((destination, index) => (
               <g key={destination.id} className="route-stop" style={{ '--stop-delay': `${index * 100}ms` } as React.CSSProperties}>
-                <circle cx={destination.mapX} cy={destination.mapY} r="7" />
-                <circle cx={destination.mapX} cy={destination.mapY} r="2.5" />
-                <text x={destination.mapX > 240 ? destination.mapX - 12 : destination.mapX + 12} y={destination.mapY + 4} textAnchor={destination.mapX > 240 ? 'end' : 'start'}>
+                <circle cx={destination.mapX} cy={destination.mapY} r="9" />
+                <text className="stop-number" x={destination.mapX} y={destination.mapY + 2.8} textAnchor="middle">{index + 1}</text>
+                <text className="stop-name" x={destination.mapX > 240 ? destination.mapX - 14 : destination.mapX + 14} y={destination.mapY + (index % 2 ? 16 : -10)} textAnchor={destination.mapX > 240 ? 'end' : 'start'}>
                   {destination.name}
                 </text>
               </g>
@@ -93,8 +128,8 @@ function JapanMap({ itinerary }: { itinerary: Itinerary | null }) {
       </svg>
       {!itinerary && (
         <div className="map-placeholder">
-          <span>01 — 09</span>
-          <p>Your route will trace itself here.</p>
+          <span>NORTH → SOUTH</span>
+          <p>A connected route, drawn to your days.</p>
         </div>
       )}
     </div>
@@ -158,7 +193,15 @@ function ActivityBlock({ label, activity }: { label: string; activity: Activity 
     <div className="activity-block">
       <span className="activity-time">{label}</span>
       <div>
-        <h4>{activity.title}</h4>
+        <div className="activity-heading">
+          <h4>{activity.title}</h4>
+          <div className="activity-tags" aria-label="Matching interests">
+            {activity.interests.length
+              ? activity.interests.map((interest) => <span key={interest}>{INTEREST_LABELS[interest]}</span>)
+              : <span>Transfer</span>}
+          </div>
+        </div>
+        <div className="activity-place"><span>Suggested stop</span><strong>{activity.place}</strong></div>
         <p>{activity.description}</p>
         <div className="activity-meta">
           <span>{activity.costJPY.max ? formatJPY(activity.costJPY) : 'No planned admission'}</span>
@@ -386,9 +429,10 @@ function App() {
                     <span className="summary-mark" aria-hidden="true">+</span>
                   </summary>
                   <div className="day-content">
-                    <div className="day-image">
-                      <img src={asset(day.destination.image)} alt={day.destination.imageAlt} />
-                      <span>{day.destination.tagline}</span>
+                    <div className="day-intro">
+                      <span>{day.destination.region} base</span>
+                      <h4>{day.destination.name}</h4>
+                      <p>{day.destination.tagline}</p>
                     </div>
                     <div className="activities">
                       <ActivityBlock label="Morning" activity={day.morning} />

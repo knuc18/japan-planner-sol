@@ -24,6 +24,7 @@ export interface MoneyRange {
 export interface Activity {
   id: string
   title: string
+  place: string
   description: string
   slot: DaySlot
   interests: Interest[]

@@ -17,6 +17,15 @@ describe('buildItinerary', () => {
     expect(buildItinerary(base)).toEqual(buildItinerary(base))
   })
 
+  it('gives every activity a concrete suggested place and relevant tags', () => {
+    const trip = buildItinerary(base)
+    const activities = trip.days.flatMap((day) => [day.morning, day.afternoon, day.evening])
+    activities.forEach((activity) => expect(activity.place.trim()).not.toBe(''))
+    activities
+      .filter((activity) => !activity.id.startsWith('transfer-'))
+      .forEach((activity) => expect(activity.interests.length).toBeGreaterThan(0))
+  })
+
   it('keeps a three-day local trip deep and non-repeating', () => {
     const trip = buildItinerary({ ...base, days: 3, pace: 'local' })
     expect(trip.days).toHaveLength(3)

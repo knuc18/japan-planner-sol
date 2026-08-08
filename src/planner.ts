@@ -161,6 +161,7 @@ const nextActivity = (
 const transferActivity = (leg: TransportLeg, destination: Destination): Activity => ({
   id: `transfer-${leg.from}-${leg.to}`,
   title: `${leg.mode === 'flight' ? 'Fly' : leg.mode === 'car' ? 'Drive' : 'Travel'} to ${destination.name}`,
+  place: `${leg.from} → ${destination.name}`,
   description: `${Math.floor(leg.durationMinutes / 60)}h ${leg.durationMinutes % 60 ? `${leg.durationMinutes % 60}m` : ''} by ${leg.mode}. ${leg.note}`,
   slot: 'morning',
   interests: [],
