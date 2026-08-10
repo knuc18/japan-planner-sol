@@ -11,6 +11,8 @@ import type {
   Activity,
   Budget,
   Destination,
+  FlightGateway,
+  Gateway,
   Interest,
   Itinerary,
   ItineraryDay,
@@ -22,6 +24,49 @@ import type {
 
 const DEFAULT_INTERESTS: Interest[] = ['food', 'history', 'nature']
 
+export const DEFAULT_PLANNER_INPUT: PlannerInput = {
+  days: 7,
+  travelMonth: '',
+  startDate: '',
+  pace: 'balanced',
+  budget: 'comfortable',
+  interests: DEFAULT_INTERESTS,
+  willingToDrive: false,
+  travellers: 1,
+  rooms: 1,
+  arrivalGateway: 'auto',
+  departureGateway: 'auto',
+}
+
+const GATEWAY_DESTINATION: Record<FlightGateway, string> = {
+  tokyo: 'tokyo',
+  osaka: 'osaka',
+  fukuoka: 'fukuoka',
+  sapporo: 'sapporo',
+  naha: 'naha',
+}
+
+const DESTINATION_GATEWAY: Record<string, FlightGateway> = {
+  sapporo: 'sapporo',
+  hakodate: 'sapporo',
+  aomori: 'tokyo',
+  sendai: 'tokyo',
+  nikko: 'tokyo',
+  tokyo: 'tokyo',
+  hakone: 'tokyo',
+  matsumoto: 'tokyo',
+  takayama: 'tokyo',
+  kanazawa: 'tokyo',
+  kyoto: 'osaka',
+  osaka: 'osaka',
+  hiroshima: 'osaka',
+  matsuyama: 'osaka',
+  fukuoka: 'fukuoka',
+  beppu: 'fukuoka',
+  kagoshima: 'fukuoka',
+  naha: 'naha',
+}
+
 const add = (...ranges: MoneyRange[]): MoneyRange => ranges.reduce(
   (total, current) => ({ min: total.min + current.min, max: total.max + current.max }),
   { min: 0, max: 0 },
@@ -32,13 +77,34 @@ const multiply = (value: MoneyRange, count: number): MoneyRange => ({
   max: value.max * count,
 })
 
-const rounded = (value: number, step = 100): number => Math.round(value / step) * step
-
-const normalize = (input: PlannerInput): PlannerInput => ({
-  ...input,
-  days: Math.min(30, Math.max(3, Math.round(input.days))),
-  interests: input.interests.length ? [...new Set(input.interests)] : DEFAULT_INTERESTS,
+const divide = (value: MoneyRange, count: number): MoneyRange => ({
+  min: value.min / count,
+  max: value.max / count,
 })
+
+const rounded = (value: number, step = 100): number => Math.round(value / step) * step
+const roundedRange = (value: MoneyRange): MoneyRange => ({ min: rounded(value.min), max: rounded(value.max) })
+
+const isGateway = (value: string | null): value is Gateway => (
+  value !== null && ['auto', 'tokyo', 'osaka', 'fukuoka', 'sapporo', 'naha'].includes(value)
+)
+
+const normalize = (input: PlannerInput): PlannerInput => {
+  const days = Math.min(30, Math.max(3, Math.round(input.days)))
+  const travellers = Math.min(8, Math.max(1, Math.round(input.travellers || 1)))
+  const rooms = Math.min(travellers, Math.max(1, Math.round(input.rooms || 1)))
+  const startDate = /^\d{4}-\d{2}-\d{2}$/.test(input.startDate) ? input.startDate : ''
+  return {
+    ...DEFAULT_PLANNER_INPUT,
+    ...input,
+    days,
+    travellers,
+    rooms,
+    startDate,
+    travelMonth: startDate.slice(0, 7) || input.travelMonth || '',
+    interests: input.interests.length ? [...new Set(input.interests)] : DEFAULT_INTERESTS,
+  }
+}
 
 export const seasonFromMonth = (travelMonth?: string): Season => {
   if (!travelMonth) return 'any'
@@ -51,6 +117,17 @@ export const seasonFromMonth = (travelMonth?: string): Season => {
 
 const overlap = (left: Interest[], right: Interest[]): number => left.filter((value) => right.includes(value)).length
 
+const routeContainsGateway = (route: RouteCorridor, gateway: Gateway): boolean => (
+  gateway === 'auto' || route.destinations.includes(GATEWAY_DESTINATION[gateway])
+)
+
+const gatewaySpan = (route: RouteCorridor, input: PlannerInput): number => {
+  if (input.arrivalGateway === 'auto' || input.departureGateway === 'auto') return 1
+  const start = route.destinations.indexOf(GATEWAY_DESTINATION[input.arrivalGateway])
+  const end = route.destinations.indexOf(GATEWAY_DESTINATION[input.departureGateway])
+  return start < 0 || end < 0 ? Number.POSITIVE_INFINITY : Math.abs(end - start) + 1
+}
+
 const routeScore = (route: RouteCorridor, input: PlannerInput, season: Season): number => {
   const interestScore = overlap(route.interests, input.interests) * 5
   const seasonScore = route.seasons.includes('any') || route.seasons.includes(season) || season === 'any' ? 4 : -4
@@ -58,26 +135,34 @@ const routeScore = (route: RouteCorridor, input: PlannerInput, season: Season): 
   const essentialBias = route.id === 'essential' ? 4 : 0
   const grandFit = route.id === 'grand' ? (input.days >= 21 && input.pace !== 'local' ? 22 : -24) : 0
   const islandFit = route.id === 'islands' && input.interests.includes('wellness') ? 4 : 0
-  return interestScore + seasonScore + durationScore + essentialBias + grandFit + islandFit
+  const gatewayFit = (routeContainsGateway(route, input.arrivalGateway) ? 6 : -30)
+    + (routeContainsGateway(route, input.departureGateway) ? 4 : -24)
+  const feasibility = gatewaySpan(route, input) <= input.days ? 0 : -40
+  return interestScore + seasonScore + durationScore + essentialBias + grandFit + islandFit + gatewayFit + feasibility
 }
 
-const chooseRoute = (input: PlannerInput, season: Season): RouteCorridor => {
-  if (input.days < 6) {
-    if (season === 'winter' && input.interests.includes('nature')) return ROUTES.find((route) => route.id === 'northern')!
-    if (input.interests.includes('wellness') && input.interests.includes('nature') && !input.interests.includes('history')) {
-      return ROUTES.find((route) => route.id === 'islands')!
-    }
-    return ROUTES.find((route) => route.id === 'essential')!
-  }
+const rankedRoutes = (input: PlannerInput, season: Season): RouteCorridor[] => [...ROUTES].sort((a, b) => {
+  const difference = routeScore(b, input, season) - routeScore(a, input, season)
+  return difference || a.id.localeCompare(b.id)
+})
 
-  const ranked = [...ROUTES].sort((a, b) => {
-    const difference = routeScore(b, input, season) - routeScore(a, input, season)
-    return difference || a.id.localeCompare(b.id)
-  })
-  const route = ranked[0]
-  return input.days > route.destinations.length * 7
-    ? ROUTES.find((candidate) => candidate.id === 'grand')!
-    : route
+const orderedDestinationIds = (route: RouteCorridor, input: PlannerInput): string[] => {
+  let ids = [...route.destinations]
+  const arrival = input.arrivalGateway === 'auto' ? route.gateway : input.arrivalGateway
+  const arrivalId = GATEWAY_DESTINATION[arrival]
+  const departureId = input.departureGateway === 'auto' ? undefined : GATEWAY_DESTINATION[input.departureGateway]
+  const arrivalIndex = ids.indexOf(arrivalId)
+  const departureIndex = departureId ? ids.indexOf(departureId) : -1
+
+  if (arrivalIndex >= 0 && departureIndex >= 0 && arrivalIndex > departureIndex) ids.reverse()
+
+  const startIndex = ids.indexOf(arrivalId)
+  if (startIndex > 0) ids = ids.slice(startIndex)
+  if (departureId) {
+    const endIndex = ids.indexOf(departureId)
+    if (endIndex >= 0) ids = ids.slice(0, endIndex + 1)
+  }
+  return ids
 }
 
 const destinationScore = (destination: Destination, interests: Interest[], season: Season): number => (
@@ -86,14 +171,16 @@ const destinationScore = (destination: Destination, interests: Interest[], seaso
 )
 
 const destinationCount = (days: number, pace: PlannerInput['pace'], routeLength: number): number => {
-  const daysPerBase = pace === 'local' ? 7 : pace === 'balanced' ? 5 : 4
+  const daysPerBase = pace === 'local' ? 6 : pace === 'balanced' ? 4 : 3
   const minimum = days >= 6 ? 2 : 1
   return Math.min(routeLength, Math.max(minimum, Math.ceil(days / daysPerBase)))
 }
 
 const selectDestinations = (route: RouteCorridor, input: PlannerInput): Destination[] => {
-  const count = destinationCount(input.days, input.pace, route.destinations.length)
-  return route.destinations.slice(0, count).map((id) => {
+  const ids = orderedDestinationIds(route, input)
+  const requiresExplicitEnd = input.departureGateway !== 'auto' && ids.at(-1) === GATEWAY_DESTINATION[input.departureGateway]
+  const count = requiresExplicitEnd ? ids.length : destinationCount(input.days, input.pace, ids.length)
+  return ids.slice(0, Math.min(input.days, count)).map((id) => {
     const destination = DESTINATION_BY_ID.get(id)
     if (!destination) throw new Error(`Unknown destination: ${id}`)
     return destination
@@ -168,6 +255,8 @@ const transferActivity = (leg: TransportLeg, destination: Destination): Activity
   seasons: ['any'],
   costJPY: { min: 0, max: 0 },
   tip: 'Keep tickets, the arrival address, and one offline route screenshot together.',
+  durationMinutes: leg.durationMinutes,
+  bookingAdvice: 'reserve',
 })
 
 const buildDays = (
@@ -223,21 +312,48 @@ const railPassMessage = (legs: TransportLeg[], input: PlannerInput): string => {
     : `Point-to-point tickets likely fit better: estimated intercity rail is ¥${rail.min.toLocaleString()}–¥${rail.max.toLocaleString()}, below the ¥${price.toLocaleString()} ordinary national pass.`
 }
 
-const makeId = (input: PlannerInput): string => {
-  const value = JSON.stringify(input)
+const makeId = (input: PlannerInput, routeId: string): string => {
+  const value = JSON.stringify({ ...input, routeId })
   let hash = 2166136261
   for (const character of value) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619)
   return Math.abs(hash >>> 0).toString(36)
 }
 
+const resolveGateways = (route: RouteCorridor, destinations: Destination[], input: PlannerInput): {
+  arrival: FlightGateway
+  departure: FlightGateway
+} => ({
+  arrival: input.arrivalGateway === 'auto' ? route.gateway : input.arrivalGateway,
+  departure: input.departureGateway === 'auto'
+    ? DESTINATION_GATEWAY[destinations.at(-1)?.id ?? route.gateway] ?? route.gateway
+    : input.departureGateway,
+})
+
+const airfareForGateways = (arrival: FlightGateway, departure: FlightGateway): { range: MoneyRange; note: string } => {
+  if (arrival === departure) {
+    return {
+      range: MANILA_AIRFARE_JPY[arrival],
+      note: `Indicative Manila round-trip airfare through ${arrival}.`,
+    }
+  }
+  const inbound = MANILA_AIRFARE_JPY[arrival]
+  const outbound = MANILA_AIRFARE_JPY[departure]
+  return {
+    range: roundedRange({ min: (inbound.min + outbound.min) / 2, max: (inbound.max + outbound.max) / 2 }),
+    note: `Indicative Manila multi-city baseline: arrive through ${arrival}, depart through ${departure}. Verify the open-jaw fare before booking.`,
+  }
+}
+
 const costBreakdown = (
   days: ItineraryDay[],
   legs: TransportLeg[],
-  route: RouteCorridor,
   budget: Budget,
+  input: PlannerInput,
+  airfare: MoneyRange,
 ): Itinerary['costs'] => {
   const daily = DAILY_BUDGETS[budget]
-  const accommodation = multiply(daily.accommodation, Math.max(1, days.length - 1))
+  const accommodationGroup = multiply(daily.accommodation, Math.max(1, days.length - 1) * input.rooms)
+  const accommodation = divide(accommodationGroup, input.travellers)
   const food = multiply(daily.food, days.length)
   const localTransport = multiply(daily.localTransport, days.length)
   const intercity = legs.reduce((total, leg) => add(total, leg.costJPY), { min: 0, max: 0 })
@@ -247,40 +363,139 @@ const costBreakdown = (
     day.afternoon.costJPY,
     day.evening.costJPY,
   ), { min: 0, max: 0 })
-  const airfare = MANILA_AIRFARE_JPY[route.gateway]
   const localAndIntercityTransport = add(localTransport, intercity)
   const totalJPY = add(airfare, accommodation, food, localAndIntercityTransport, activities)
+  const groupTotalJPY = add(
+    multiply(airfare, input.travellers),
+    accommodationGroup,
+    multiply(food, input.travellers),
+    multiply(localAndIntercityTransport, input.travellers),
+    multiply(activities, input.travellers),
+  )
   return {
     airfare,
-    accommodation,
+    accommodation: roundedRange(accommodation),
     food,
     localAndIntercityTransport,
     activities,
-    totalJPY: { min: rounded(totalJPY.min), max: rounded(totalJPY.max) },
-    totalPHP: {
-      min: rounded(totalJPY.min * JPY_TO_PHP_RATE),
-      max: rounded(totalJPY.max * JPY_TO_PHP_RATE),
-    },
+    totalJPY: roundedRange(totalJPY),
+    totalPHP: roundedRange(multiply(totalJPY, JPY_TO_PHP_RATE)),
+    groupTotalJPY: roundedRange(groupTotalJPY),
+    groupTotalPHP: roundedRange(multiply(groupTotalJPY, JPY_TO_PHP_RATE)),
   }
 }
 
-export const buildItinerary = (rawInput: PlannerInput): Itinerary => {
-  const input = normalize(rawInput)
-  const season = seasonFromMonth(input.travelMonth)
-  const route = chooseRoute(input, season)
+const buildForRoute = (route: RouteCorridor, input: PlannerInput, season: Season): Itinerary => {
   const destinations = selectDestinations(route, input)
+  const maximumBases = input.pace === 'local'
+    ? Math.ceil(input.days / 3)
+    : input.pace === 'balanced'
+      ? Math.ceil(input.days / 2)
+      : Math.ceil(input.days / 1.5)
+  if (destinations.length > maximumBases) {
+    throw new Error(`This corridor needs ${destinations.length} bases, which is too rushed for a ${input.pace} ${input.days}-day trip.`)
+  }
+  if (input.arrivalGateway !== 'auto' && destinations[0]?.id !== GATEWAY_DESTINATION[input.arrivalGateway]) {
+    throw new Error(`This corridor does not begin at ${input.arrivalGateway}.`)
+  }
+  if (input.departureGateway !== 'auto' && destinations.at(-1)?.id !== GATEWAY_DESTINATION[input.departureGateway]) {
+    throw new Error(`This corridor cannot reach ${input.departureGateway} in ${input.days} days.`)
+  }
   const allocated = allocateDays(destinations, input, season)
   const { days, legs } = buildDays(destinations, allocated, input, season)
   const routeNames = destinations.map((destination) => destination.name).join(' → ')
+  const gateways = resolveGateways(route, destinations, input)
+  const airfare = airfareForGateways(gateways.arrival, gateways.departure)
+  const matchedInterests = route.interests.filter((interest) => input.interests.includes(interest)).slice(0, 3)
+  const transferMinutes = legs.reduce((total, leg) => total + leg.durationMinutes, 0)
 
   return {
-    id: makeId(input),
+    id: makeId(input, route.id),
     title: `${input.days} days along ${route.name}`,
     summary: `${routeNames}. A ${input.pace} route shaped around ${input.interests.slice(0, 3).join(', ')}.`,
     days,
     destinations,
-    costs: costBreakdown(days, legs, route, input.budget),
+    costs: costBreakdown(days, legs, input.budget, input, airfare.range),
     routeName: route.name,
     railPassNote: railPassMessage(legs, input),
+    fitReason: matchedInterests.length
+      ? `Strong for ${matchedInterests.join(', ')} with ${destinations.length} bases and ${Math.round(transferMinutes / 60)} hours of planned intercity travel.`
+      : `A duration-led alternative with ${destinations.length} bases and ${Math.round(transferMinutes / 60)} hours of planned intercity travel.`,
+    arrivalGateway: gateways.arrival,
+    departureGateway: gateways.departure,
+    airfareNote: airfare.note,
+    transferMinutes,
+    stays: destinations.map((destination, index) => ({
+      destinationId: destination.id,
+      days: allocated[index],
+      nights: Math.max(0, allocated[index] - (index === destinations.length - 1 ? 1 : 0)),
+    })),
   }
+}
+
+export const buildItineraryOptions = (rawInput: PlannerInput): Itinerary[] => {
+  const input = normalize(rawInput)
+  const season = seasonFromMonth(input.travelMonth)
+  const options: Itinerary[] = []
+  for (const route of rankedRoutes(input, season)) {
+    try {
+      const itinerary = buildForRoute(route, input, season)
+      const signature = itinerary.destinations.map((destination) => destination.id).join(':')
+      if (!options.some((option) => option.destinations.map((destination) => destination.id).join(':') === signature)) {
+        options.push(itinerary)
+      }
+    } catch {
+      // A corridor can be unsuitable after explicit gateway constraints; the next ranked route remains useful.
+    }
+    if (options.length === 3) break
+  }
+  if (!options.length) throw new Error('No connected route fits these choices. Try automatic gateways or a longer trip.')
+  return options
+}
+
+export const buildItinerary = (rawInput: PlannerInput): Itinerary => buildItineraryOptions(rawInput)[0]
+
+export const plannerInputToSearchParams = (rawInput: PlannerInput, routeId?: string): URLSearchParams => {
+  const input = normalize(rawInput)
+  const params = new URLSearchParams({
+    plan: '1',
+    days: String(input.days),
+    pace: input.pace,
+    budget: input.budget,
+    interests: input.interests.join(','),
+    travellers: String(input.travellers),
+    rooms: String(input.rooms),
+    arrive: input.arrivalGateway,
+    depart: input.departureGateway,
+  })
+  if (input.startDate) params.set('start', input.startDate)
+  else if (input.travelMonth) params.set('month', input.travelMonth)
+  if (input.willingToDrive) params.set('drive', '1')
+  if (routeId) params.set('route', routeId)
+  return params
+}
+
+export const plannerInputFromSearchParams = (params: URLSearchParams): PlannerInput | null => {
+  if (params.get('plan') !== '1') return null
+  const pace = params.get('pace')
+  const budget = params.get('budget')
+  const interests = (params.get('interests') ?? '').split(',').filter((value): value is Interest => (
+    ['food', 'history', 'nature', 'art', 'anime', 'shopping', 'nightlife', 'wellness', 'themeParks', 'photography'].includes(value)
+  ))
+  const arrivalGateway = params.get('arrive')
+  const departureGateway = params.get('depart')
+  return normalize({
+    ...DEFAULT_PLANNER_INPUT,
+    days: Number(params.get('days')) || DEFAULT_PLANNER_INPUT.days,
+    startDate: params.get('start') ?? '',
+    travelMonth: params.get('month') ?? '',
+    pace: pace === 'local' || pace === 'explorer' ? pace : 'balanced',
+    budget: budget === 'smart' || budget === 'premium' ? budget : 'comfortable',
+    interests,
+    willingToDrive: params.get('drive') === '1',
+    travellers: Number(params.get('travellers')) || 1,
+    rooms: Number(params.get('rooms')) || 1,
+    arrivalGateway: isGateway(arrivalGateway) ? arrivalGateway : 'auto',
+    departureGateway: isGateway(departureGateway) ? departureGateway : 'auto',
+  })
 }

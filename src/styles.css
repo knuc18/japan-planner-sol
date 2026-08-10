@@ -1883,3 +1883,500 @@ footer > a {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Working planner additions */
+.trip-basics,
+.gateway-grid,
+.route-chooser,
+.trip-prep {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 3rem);
+}
+
+.trip-basics,
+.gateway-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trip-basics > .month-field,
+.trip-basics > .party-field {
+  border-bottom: 1px solid var(--line);
+}
+
+.party-field p,
+.gateway-field > p {
+  margin: 0.9rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  line-height: 1.6;
+}
+
+.number-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.number-fields label,
+.gateway-grid label,
+.day-view-nav label {
+  display: grid;
+  gap: 0.55rem;
+  color: var(--ink-soft);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.number-fields input,
+.gateway-grid select,
+.day-view-nav select {
+  width: 100%;
+  padding: 0.85rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--ink);
+  background: transparent;
+}
+
+.form-error {
+  margin: 1rem 0 0;
+  color: #9f2f1f;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.route-chooser {
+  grid-template-columns: minmax(14rem, 0.65fr) minmax(0, 1.35fr);
+  align-items: start;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.route-chooser h3,
+.trip-prep h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(2.6rem, 4vw, 4.8rem);
+  font-weight: 390;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+.route-options {
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.route-option {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  gap: 1.25rem;
+  align-items: start;
+  padding: 1.5rem 0.75rem;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--light);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 180ms ease, padding 180ms ease;
+}
+
+.route-option:hover,
+.route-option.active {
+  padding-right: 1.1rem;
+  padding-left: 1.1rem;
+  background: rgba(var(--accent-rgb), 0.1);
+}
+
+.route-option > span {
+  color: var(--accent-soft);
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
+.route-option strong,
+.route-option b {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 480;
+}
+
+.route-option p {
+  margin: 0.45rem 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+
+.route-option small {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 0.58rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.route-option b {
+  color: var(--accent-soft);
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.results-toolbar {
+  position: sticky;
+  z-index: 8;
+  top: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(27, 30, 26, 0.94);
+  backdrop-filter: blur(16px);
+}
+
+.results-toolbar button,
+.day-view-nav button,
+.footer-theme {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  background: transparent;
+  font-size: 0.6rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.results-toolbar button:hover,
+.results-toolbar button.active,
+.day-view-nav button:hover:not(:disabled) {
+  border-color: var(--accent-soft);
+  color: var(--night);
+  background: var(--accent-soft);
+}
+
+.results-toolbar > span {
+  margin-left: auto;
+  color: var(--accent-soft);
+  font-size: 0.65rem;
+}
+
+.gateway-note {
+  padding: 1.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.72rem;
+  line-height: 1.65;
+}
+
+.gateway-note span {
+  color: var(--accent-soft);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gateway-note p {
+  margin: 0.5rem 0 0;
+}
+
+.group-total {
+  border-top: 1px solid rgba(var(--accent-rgb), 0.3);
+}
+
+.activity-logistics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  align-items: center;
+  margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.6rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.activity-logistics a {
+  color: var(--accent-soft);
+  text-underline-offset: 3px;
+}
+
+.weather-backup {
+  margin-top: 0.9rem;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.64rem;
+}
+
+.weather-backup summary {
+  display: block;
+  min-height: 0;
+  color: var(--accent-soft);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.weather-backup p {
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+}
+
+.day-intro > small {
+  display: block;
+  margin-top: 0.85rem;
+  color: var(--accent-soft);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.day-view-nav {
+  position: sticky;
+  z-index: 7;
+  top: 4.4rem;
+  display: grid;
+  grid-template-columns: auto minmax(12rem, 1fr) auto;
+  gap: 0.8rem;
+  align-items: end;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(27, 30, 26, 0.96);
+}
+
+.day-view-nav label {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.day-view-nav select {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  background: var(--night);
+}
+
+.day-view-nav button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.trip-prep {
+  grid-template-columns: minmax(14rem, 0.72fr) minmax(0, 1.28fr);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.trip-prep > div:first-child > p:last-child {
+  max-width: 34rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.76rem;
+  line-height: 1.7;
+}
+
+.prep-list {
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.prep-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.prep-item label {
+  cursor: pointer;
+}
+
+.prep-item input {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.15rem;
+  accent-color: var(--accent-soft);
+}
+
+.prep-item a {
+  display: block;
+  width: fit-content;
+  margin-top: 0.35rem;
+  color: var(--accent-soft);
+  font-size: 0.61rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-underline-offset: 3px;
+}
+
+footer {
+  grid-template-columns: 1fr 1fr auto auto;
+}
+
+.footer-theme {
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+@media (max-width: 1050px) {
+  .planner-map {
+    order: initial;
+  }
+
+  .route-chooser,
+  .trip-prep {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .trip-basics,
+  .gateway-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .planner-map {
+    margin-top: 2.5rem;
+  }
+
+  .planner-map .map-wrap,
+  .planner-map .japan-map {
+    height: 300px;
+    min-height: 300px;
+  }
+
+  .route-chooser h3,
+  .trip-prep h3 {
+    font-size: 2.6rem;
+  }
+
+  .route-option {
+    grid-template-columns: 1.5rem 1fr;
+  }
+
+  .route-option b {
+    grid-column: 2;
+  }
+
+  .results-toolbar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .results-toolbar button {
+    min-height: 44px;
+  }
+
+  .results-toolbar > span {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+
+  .day-view-nav {
+    top: 6.6rem;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .day-view-nav label {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .activity-logistics {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  footer {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-theme {
+    width: fit-content;
+  }
+}
+
+@media print {
+  @page { margin: 12mm; }
+
+  :root,
+  body,
+  main,
+  .results {
+    color: #111 !important;
+    background: #fff !important;
+  }
+
+  .hero,
+  .thesis,
+  .editorial-strip,
+  .planner,
+  .route-chooser,
+  .results-toolbar,
+  .route-map-dark,
+  .results-actions,
+  .notes,
+  footer,
+  .summary-mark,
+  .weather-backup,
+  .activity-logistics a {
+    display: none !important;
+  }
+
+  .section-pad {
+    padding: 10mm 0;
+  }
+
+  .results-intro,
+  .route-overview,
+  .day-plan-heading,
+  .trip-prep {
+    grid-template-columns: 1fr 1fr;
+    color: #111;
+    border-color: #bbb;
+  }
+
+  .route-overview {
+    display: grid;
+  }
+
+  .route-details,
+  .cost-panel {
+    color: #111;
+  }
+
+  .days details,
+  .activity-block,
+  .days summary,
+  .route-list li,
+  .prep-item {
+    border-color: #ccc;
+  }
+
+  .day-content {
+    break-inside: avoid;
+  }
+
+  .days details {
+    break-inside: avoid;
+  }
+
+  .results *,
+  .results-title-block > p:last-child,
+  .day-plan-heading > p,
+  .activity-block p,
+  .activity-meta,
+  .route-list small,
+  .trip-prep > div:first-child > p:last-child,
+  .prep-item {
+    color: #111 !important;
+  }
+}

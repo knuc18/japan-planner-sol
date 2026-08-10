@@ -1,15 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import { DESTINATIONS, JPY_TO_PHP_RATE } from './data'
-import { buildItinerary, seasonFromMonth } from './planner'
+import {
+  buildItinerary,
+  buildItineraryOptions,
+  plannerInputFromSearchParams,
+  plannerInputToSearchParams,
+  seasonFromMonth,
+} from './planner'
 import type { PlannerInput } from './types'
 
 const base: PlannerInput = {
   days: 7,
   travelMonth: '',
+  startDate: '',
   pace: 'balanced',
   budget: 'comfortable',
   interests: ['food', 'history', 'nature'],
   willingToDrive: false,
+  travellers: 1,
+  rooms: 1,
+  arrivalGateway: 'auto',
+  departureGateway: 'auto',
 }
 
 describe('buildItinerary', () => {
@@ -32,6 +43,21 @@ describe('buildItinerary', () => {
     activities
       .filter((activity) => !activity.id.startsWith('transfer-'))
       .forEach((activity) => expect(activity.interests.length).toBeGreaterThan(0))
+    activities.forEach((activity) => {
+      expect(activity.durationMinutes).toBeGreaterThan(0)
+      expect(['walk-in', 'check-ahead', 'reserve']).toContain(activity.bookingAdvice)
+    })
+  })
+
+  it('offers distinct connected route alternatives for the same choices', () => {
+    const options = buildItineraryOptions(base)
+    expect(options).toHaveLength(3)
+    expect(new Set(options.map((option) => option.destinations.map((destination) => destination.id).join(':'))).size).toBe(3)
+    options.forEach((option) => {
+      expect(option.days).toHaveLength(base.days)
+      expect(option.stays.reduce((total, stay) => total + stay.nights, 0)).toBe(base.days - 1)
+      expect(option.fitReason.length).toBeGreaterThan(20)
+    })
   })
 
   it('includes concrete venue and order guidance across every destination', () => {
@@ -109,5 +135,40 @@ describe('buildItinerary', () => {
     expect(trip.costs.totalJPY.max).toBe(Math.round(max / 100) * 100)
     expect(Math.abs(trip.costs.totalPHP.min - trip.costs.totalJPY.min * JPY_TO_PHP_RATE)).toBeLessThanOrEqual(100)
     expect(Math.abs(trip.costs.totalPHP.max - trip.costs.totalJPY.max * JPY_TO_PHP_RATE)).toBeLessThanOrEqual(100)
+  })
+
+  it('models explicit gateways and whole-party room sharing', () => {
+    const trip = buildItinerary({
+      ...base,
+      travellers: 4,
+      rooms: 2,
+      arrivalGateway: 'tokyo',
+      departureGateway: 'osaka',
+    })
+    expect(trip.arrivalGateway).toBe('tokyo')
+    expect(trip.departureGateway).toBe('osaka')
+    expect(trip.destinations[0].id).toBe('tokyo')
+    expect(trip.destinations.at(-1)?.id).toBe('osaka')
+    expect(trip.costs.groupTotalJPY.min).toBeGreaterThan(trip.costs.totalJPY.min)
+    expect(trip.airfareNote).toContain('multi-city')
+    buildItineraryOptions({ ...base, arrivalGateway: 'tokyo', departureGateway: 'osaka' })
+      .forEach((option) => expect(option.destinations.length).toBeLessThanOrEqual(Math.ceil(base.days / 2)))
+  })
+
+  it('round-trips a shareable plan through URL parameters', () => {
+    const input: PlannerInput = {
+      ...base,
+      days: 12,
+      startDate: '2027-04-10',
+      travelMonth: '2027-04',
+      interests: ['food', 'art'],
+      willingToDrive: true,
+      travellers: 3,
+      rooms: 2,
+      arrivalGateway: 'osaka',
+      departureGateway: 'fukuoka',
+    }
+    const parsed = plannerInputFromSearchParams(plannerInputToSearchParams(input, 'route-id'))
+    expect(parsed).toEqual(input)
   })
 })

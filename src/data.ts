@@ -1,5 +1,6 @@
 import type {
   Activity,
+  BookingAdvice,
   DaySlot,
   Destination,
   Interest,
@@ -41,6 +42,9 @@ interface ActivitySeed {
   cost: MoneyRange
   seasons?: Season[]
   tip?: string
+  durationMinutes?: number
+  bookingAdvice?: BookingAdvice
+  rainAlternative?: string
 }
 
 interface DestinationSeed {
@@ -73,6 +77,21 @@ interface DestinationSeed {
 }
 
 const range = (min: number, max: number): MoneyRange => ({ min, max })
+
+const bookingAdvice = (activity: ActivitySeed): BookingAdvice => {
+  if (activity.bookingAdvice) return activity.bookingAdvice
+  const text = `${activity.title} ${activity.description}`
+  if (activity.interests.includes('themeParks') || /workshop|cycling|sand bath|live |performance/i.test(text)) return 'reserve'
+  if (activity.interests.some((interest) => ['food', 'nightlife', 'wellness'].includes(interest)) || /museum|garden/i.test(text)) return 'check-ahead'
+  return 'walk-in'
+}
+
+const activityDuration = (activity: ActivitySeed): number => {
+  if (activity.durationMinutes) return activity.durationMinutes
+  if (activity.interests.includes('themeParks')) return 420
+  if (/half-day|day trip|day$|cycling/i.test(activity.title)) return 240
+  return activity.slot === 'afternoon' ? 180 : 120
+}
 
 const commonActivities = (seed: DestinationSeed): ActivitySeed[] => [
   {
@@ -232,6 +251,13 @@ const makeDestination = (seed: DestinationSeed): Destination => ({
       seasons: activity.seasons ?? ['any'],
       costJPY: activity.cost,
       tip: activity.tip ?? 'Check same-day opening information before setting out.',
+      durationMinutes: activityDuration(activity),
+      bookingAdvice: bookingAdvice(activity),
+      rainAlternative: activity.rainAlternative ?? (
+        activity.interests.some((interest) => ['nature', 'photography'].includes(interest))
+          ? `Move this block to ${seed.areas.museum} if weather makes the outdoor plan impractical.`
+          : undefined
+      ),
     }
   }),
 })

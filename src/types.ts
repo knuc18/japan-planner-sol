@@ -15,6 +15,9 @@ export type Budget = 'smart' | 'comfortable' | 'premium'
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter' | 'any'
 export type DaySlot = 'morning' | 'afternoon' | 'evening'
 export type TransportMode = 'train' | 'flight' | 'bus' | 'ferry' | 'car'
+export type Gateway = 'auto' | 'tokyo' | 'osaka' | 'fukuoka' | 'sapporo' | 'naha'
+export type FlightGateway = Exclude<Gateway, 'auto'>
+export type BookingAdvice = 'walk-in' | 'check-ahead' | 'reserve'
 
 export interface MoneyRange {
   min: number
@@ -32,6 +35,9 @@ export interface Activity {
   seasons: Season[]
   costJPY: MoneyRange
   tip: string
+  durationMinutes: number
+  bookingAdvice: BookingAdvice
+  rainAlternative?: string
 }
 
 export interface Destination {
@@ -61,11 +67,16 @@ export interface TransportLeg {
 
 export interface PlannerInput {
   days: number
-  travelMonth?: string
+  travelMonth: string
+  startDate: string
   pace: Pace
   budget: Budget
   interests: Interest[]
   willingToDrive: boolean
+  travellers: number
+  rooms: number
+  arrivalGateway: Gateway
+  departureGateway: Gateway
 }
 
 export interface ItineraryDay {
@@ -85,6 +96,8 @@ export interface CostBreakdown {
   activities: MoneyRange
   totalJPY: MoneyRange
   totalPHP: MoneyRange
+  groupTotalJPY: MoneyRange
+  groupTotalPHP: MoneyRange
 }
 
 export interface SourceMetadata {
@@ -102,4 +115,10 @@ export interface Itinerary {
   costs: CostBreakdown
   routeName: string
   railPassNote: string
+  fitReason: string
+  arrivalGateway: FlightGateway
+  departureGateway: FlightGateway
+  airfareNote: string
+  transferMinutes: number
+  stays: { destinationId: string; days: number; nights: number }[]
 }
