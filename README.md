@@ -2,6 +2,8 @@
 
 A static, editorial Japan trip planner for first-time independent travelers from Manila. Choose 3–30 days, travel pace, month, budget, interests, and willingness to drive; the site returns a connected route, daily morning/afternoon/evening plan, transport guidance, and JPY/PHP cost range.
 
+The planner compares up to three connected route shapes, supports explicit arrival/departure gateways and shared-room party estimates, and adds dated daily plans, map directions, reservation guidance, wet-weather backups, a focused day view, shareable URL state, and print-to-PDF output.
+
 Live site: [knuc18.github.io/japan-planner-sol](https://knuc18.github.io/japan-planner-sol/)
 
 ## Local development
@@ -24,7 +26,8 @@ The production preview is served under `/japan-planner-sol/` to match GitHub Pag
 
 ## How planning works
 
-- React + TypeScript + Vite; no backend, accounts, cookies, analytics, or runtime APIs.
+- React + TypeScript + Vite; no backend, accounts, cookies, analytics, browser storage, or runtime APIs.
+- Plan choices are serialized into the URL so a route can be reopened or shared without storing traveler data.
 - A pure rules engine scores curated route corridors, regions, seasons, and activities, then allocates up to seven distinct days per base.
 - Costs are per person for a traveler using a private room and include indicative Manila airfare, lodging, food, activities, and domestic transport.
 - Shopping, insurance, visas, and disruption costs are excluded. All fares are planning ranges and must be verified before booking.
